@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: producer
-          image: gcr.io/myproject/producer:latest
+          image: gcr.io/simple-project-293220/producer:latest
           imagePullPolicy: Always
           env:
             - name: PODNAME
@@ -22,7 +22,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
           args:
-            - --redisHost=1.2.3.4
+            - --redisHost=10.246.57.124
             - --host=0.0.0.0
             - --id=$(PODNAME)
           ports:

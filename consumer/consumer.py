@@ -1,29 +1,23 @@
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import argparse
 import base64
 import queue
 
 from engineio.payload import Payload
-# import eventlet
+import eventlet
 import redis
 from flask import Flask
 from flask_socketio import SocketIO
 
 # for socketio background tasks
-# eventlet.monkey_patch()
+eventlet.monkey_patch()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--host', default='localhost')
+parser.add_argument('--port', default=8080)
+parser.add_argument('--redisHost', required=True)
+parser.add_argument('--redisQueue', default='liveq')
+parser.add_argument('--id', default='Consume')
+args = parser.parse_args()
 
 app = Flask(__name__)
 Payload.max_decode_packets = 50
@@ -68,14 +62,6 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--host', default='localhost')
-    parser.add_argument('--port', default=8080)
-    parser.add_argument('--redisHost', required=True)
-    parser.add_argument('--redisQueue', default='liveq')
-    parser.add_argument('--id', default='Consume')
-    args = parser.parse_args()
-
     socketio.init_app(app)
     socketio.start_background_task(_enqueue_audio, args.redisQueue)
     socketio.run(app, host=args.host, port=args.port)
