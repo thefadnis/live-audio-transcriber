@@ -1,23 +1,5 @@
-// Copyright 2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// code referenced from online sources
 
-// Leader Election client implementation that uses the built-in Kubernetes leaderelection
-// package. Intended to be deployed as sidecar alongside a separate container, which is notified
-// via a configured HTTP webhook when it is elected leader.
-//
-// Adapted from https://github.com/kubernetes/client-go/blob/master/examples/leader-election/main.go.
-// See also https://github.com/kubernetes/client-go/blob/kubernetes-1.14.8/tools/leaderelection/leaderelection.go
 package main
 
 import (
@@ -41,8 +23,8 @@ import (
 )
 
 var (
-	id            = flag.String("id", uuid.New().String(), "This pod's participant ID for leader election")
-	port          = flag.Int("electionPort", 4040, "Required. Send HTTP leader election notifications to this port")
+	id            = flag.String("id", uuid.New().String(), " pod's participant ID")
+	port          = flag.Int("electionPort", 4040, "leader election notifications to this port")
 	lockName      = flag.String("lockName", "", "the lock resource name")
 	lockNamespace = flag.String("lockNamespace", "default", "the lock resource namespace")
 	leaseDuration = flag.Duration("leaseDuration", 4, "time (seconds) that non-leader candidates will wait to force acquire leadership")
@@ -73,23 +55,15 @@ func main() {
 		klog.Fatal("Missing --lockNamespace flag.")
 	}
 
-	// Leader election uses the Kubernetes API by writing to a lock object.
-	// Conflicting writes are detected and each client handles those actions
-	// independently.
 	config, err := buildConfig()
 	if err != nil {
 		klog.Fatal(err)
 	}
 	client := clientset.NewForConfigOrDie(config)
 
-	// Use a Go context so we can tell the leaderelection code when we
-	// want to step down
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Listen for interrupts or the Linux SIGTERM signal and cancel
-	// our context, which the leader election code will observe and
-	// step down
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -115,16 +89,8 @@ func main() {
 	stopURL := fmt.Sprintf("%s/stop", listenerRootURL)
 	klog.Infof("Will notify listener at %s of leader changes", listenerRootURL)
 
-	// Start the leader election code loop.
-	// Notify changes in leader status via the listener webhook
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock: lock,
-		// IMPORTANT: you MUST ensure that any code you have that
-		// is protected by the lease must terminate **before**
-		// you call cancel. Otherwise, you could have a background
-		// loop still running and another process could
-		// get elected before your background loop finished, violating
-		// the stated goal of the lease.
 		ReleaseOnCancel: true,
 		LeaseDuration:   *leaseDuration * time.Second,
 		RenewDeadline:   *renewDeadline * time.Second,

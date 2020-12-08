@@ -22,20 +22,19 @@ import (
 )
 
 var (
-	electionPort = flag.Int("electionPort", 4040,
-		"Listen at this port for leader election updates. Set to zero to disable leader election")
-	redisHost          = flag.String("redisHost", "localhost", "Redis host IP")
-	audioQueue         = flag.String("audioQueue", "liveq", "Redis key for input audio data")
-	transcriptionQueue = flag.String("transcriptionQueue", "transcriptions", "Redis key for output transcriptions")
-	recoveryQueue      = flag.String("recoveryQueue", "recoverq", "Redis key for recent audio data used for recovery")
-	recoveryRetain     = flag.Duration("recoveryRetainLast", 3*time.Second, "Retain this duration of audio, replayed during recovery")
-	recoveryExpiry     = flag.Duration("recoveryExpiry", 30*time.Second, "Expire data in recovery queue after this time")
-	flushTimeout       = flag.Duration("flushTimeout", 3000*time.Millisecond, "Emit any pending transcriptions after this time")
-	pendingWordCount   = flag.Int("pendingWordCount", 4, "Treat last N transcribed words as pending")
-	sampleRate         = flag.Int("sampleRate", 16000, "Sample rate (Hz)")
-	channels           = flag.Int("channels", 1, "Number of audio channels")
-	lang               = flag.String("lang", "en-US", "Transcription language code")
-	phrases            = flag.String("phrases", "", "Comma-separated list of phrase hints for Speech API. Phrases with spaces should be quoted")
+	// electionPort = flag.Int("electionPort", 4040,"leader election")
+	redisHost          = flag.String("redisHost", "localhost", "Redis IP")
+	audioQueue         = flag.String("audioQueue", "liveq", "input audio data")
+	transcriptionQueue = flag.String("transcriptionQueue", "transcriptions", "output transcriptions")
+	recoveryQueue      = flag.String("recoveryQueue", "recoverq", "recent audio data")
+	recoveryRetain     = flag.Duration("recoveryRetainLast", 3*time.Second, "Retain  duration ")
+	recoveryExpiry     = flag.Duration("recoveryExpiry", 30*time.Second, "Expire data ")
+	flushTimeout       = flag.Duration("flushTimeout", 3000*time.Millisecond, "pending transcriptions emitted after time")
+	pendingWordCount   = flag.Int("pendingWordCount", 4, "Treat last N are pending")
+	sampleRate         = flag.Int("sampleRate", 16000, "(Hz)")
+	channels           = flag.Int("channels", 1, "# audio channels")
+	lang               = flag.String("lang", "en-US", "language code")
+	phrases            = flag.String("phrases", "", " hints for Speech API")
 
 	redisClient        *redis.Client
 	recoveryRetainSize = int64(*recoveryRetain / (100 * time.Millisecond)) // each audio element ~100ms
@@ -80,52 +79,53 @@ func main() {
 		InterimResults: true,
 	}
 
-	if *electionPort > 0 {
-		var ctx context.Context
-		var cancel context.CancelFunc
-		addr := fmt.Sprintf(":%d", *electionPort)
-		server := &http.Server{Addr: addr}
+	// if *electionPort > 0 {
+	// 	var ctx context.Context
+	// 	var cancel context.CancelFunc
+	// 	addr := fmt.Sprintf(":%d", *electionPort)
+	// 	server := &http.Server{Addr: addr}
 
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			<-ch
-			if cancel != nil {
-				cancel()
-			}
-			klog.Info("Received termination, stopping transciptions")
-			if err := server.Shutdown(context.TODO()); err != nil {
-				klog.Fatalf("Error shutting down HTTP server: %v", err)
-			}
-		}()
+	// 	ch := make(chan os.Signal, 1)
+	// 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	// 	go func() {
+	// 		<-ch
+	// 		if cancel != nil {
+	// 			cancel()
+	// 		}
+	// 		klog.Info("Received termination, stopping transciptions")
+	// 		if err := server.Shutdown(context.TODO()); err != nil {
+	// 			klog.Fatalf("Error shutting down HTTP server: %v", err)
+	// 		}
+	// 	}()
 
-		isLeader := false
-		webHandler := func(res http.ResponseWriter, req *http.Request) {
+	// 	isLeader := false
+	// 	webHandler := func(res http.ResponseWriter, req *http.Request) {
 
-			if strings.Contains(req.URL.Path, "start") {
-				if !isLeader {
-					isLeader = true
-					klog.Infof("I became the leader! Starting goroutine to send audio")
-					ctx, cancel = context.WithCancel(context.Background())
-					go sendAudio(ctx, speechClient, streamingConfig)
-				}
-			}
-			if strings.Contains(req.URL.Path, "stop") {
-				if isLeader {
-					isLeader = false
-					klog.Infof("I stopped being the leader!")
-					cancel()
-				}
-			}
-			res.WriteHeader(http.StatusOK)
-		}
-		http.HandleFunc("/", webHandler)
-		klog.Infof("Starting leader election listener at port %s", addr)
-		server.ListenAndServe()
-	} else {
-		klog.Info("Not doing leader election")
-		sendAudio(context.Background(), speechClient, streamingConfig)
-	}
+	// 		if strings.Contains(req.URL.Path, "start") {
+	// 			if !isLeader {
+	// 				isLeader = true
+	// 				klog.Infof("I became the leader! Starting goroutine to send audio")
+	// 				ctx, cancel = context.WithCancel(context.Background())
+	// 				go sendAudio(ctx, speechClient, streamingConfig)
+	// 			}
+	// 		}
+	// 		if strings.Contains(req.URL.Path, "stop") {
+	// 			if isLeader {
+	// 				isLeader = false
+	// 				klog.Infof("I stopped being the leader!")
+	// 				cancel()
+	// 			}
+	// 		}
+	// 		res.WriteHeader(http.StatusOK)
+	// 	}
+	// 	http.HandleFunc("/", webHandler)
+	// 	klog.Infof("Starting leader election listener at port %s", addr)
+	// 	server.ListenAndServe()
+	// } else {
+	// 	klog.Info("Not doing leader election")
+	// 	sendAudio(context.Background(), speechClient, streamingConfig)
+	// }
+	sendAudio(context.Background(), speechClient, streamingConfig)
 }
 
 // Consumes queued audio data from Redis, and sends to Speech.
