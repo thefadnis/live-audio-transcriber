@@ -13,7 +13,6 @@ steps:
 
 images: [
   'gcr.io/$PROJECT_ID/consumer',
-  'gcr.io/$PROJECT_ID/leader-election',
   'gcr.io/$PROJECT_ID/transcriber',
   'gcr.io/$PROJECT_ID/producer'
 ]

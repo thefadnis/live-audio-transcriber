@@ -44,13 +44,13 @@ def index():
 def connect():
     print('Connected : %s' % params.id)
     socketio.emit('pod_id', params.id)
-    buff.put_nowait(1)
+    q.put_nowait(1)
 
 
 @socketio.on('disconnect')
 def disconnect():
     print('Disconnected : %s' % params.id)
-    buff.get_nowait()
+    q.get_nowait()
 
 if __name__ == '__main__':
     print('Started %s...' % params.id)

@@ -8,11 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net/http"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	speech "cloud.google.com/go/speech/apiv1p1beta1"
@@ -180,7 +176,6 @@ func treatAPIresponse(resp speechpb.StreamingRecognizeResponse) {
 		klog.Info("Final result! Resetting")
 		final := elements[lastIndex:]
 		publish(strings.Join(final, " "))
-		resetIndex()
 		return
 	}
 	if res.Stability < 0.75 {

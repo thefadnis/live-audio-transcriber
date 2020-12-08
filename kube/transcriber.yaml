@@ -59,7 +59,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
           args:
-            - --redisHost=10.246.57.124
+            - --redisHost=10.35.210.180
             - --sampleRate=44100
             - --channels=1
             - --lang=en-US
