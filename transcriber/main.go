@@ -79,52 +79,6 @@ func main() {
 		InterimResults: true,
 	}
 
-	// if *electionPort > 0 {
-	// 	var ctx context.Context
-	// 	var cancel context.CancelFunc
-	// 	addr := fmt.Sprintf(":%d", *electionPort)
-	// 	server := &http.Server{Addr: addr}
-
-	// 	ch := make(chan os.Signal, 1)
-	// 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	// 	go func() {
-	// 		<-ch
-	// 		if cancel != nil {
-	// 			cancel()
-	// 		}
-	// 		klog.Info("Received termination, stopping transciptions")
-	// 		if err := server.Shutdown(context.TODO()); err != nil {
-	// 			klog.Fatalf("Error shutting down HTTP server: %v", err)
-	// 		}
-	// 	}()
-
-	// 	isLeader := false
-	// 	webHandler := func(res http.ResponseWriter, req *http.Request) {
-
-	// 		if strings.Contains(req.URL.Path, "start") {
-	// 			if !isLeader {
-	// 				isLeader = true
-	// 				klog.Infof("I became the leader! Starting goroutine to send audio")
-	// 				ctx, cancel = context.WithCancel(context.Background())
-	// 				go sendAudio(ctx, speechClient, streamingConfig)
-	// 			}
-	// 		}
-	// 		if strings.Contains(req.URL.Path, "stop") {
-	// 			if isLeader {
-	// 				isLeader = false
-	// 				klog.Infof("I stopped being the leader!")
-	// 				cancel()
-	// 			}
-	// 		}
-	// 		res.WriteHeader(http.StatusOK)
-	// 	}
-	// 	http.HandleFunc("/", webHandler)
-	// 	klog.Infof("Starting leader election listener at port %s", addr)
-	// 	server.ListenAndServe()
-	// } else {
-	// 	klog.Info("Not doing leader election")
-	// 	sendAudio(context.Background(), speechClient, streamingConfig)
-	// }
 	sendAudio(context.Background(), speechClient, streamingConfig)
 }
 
