@@ -19,27 +19,6 @@ import (
 	"k8s.io/klog"
 )
 
-var (
-	redisHost          = flag.String("redisHost", "localhost", "Redis IP")
-	redisClient        *redis.Client
-	aQ         		= flag.String("aQ", "liveq", "input audio data")
-	tQ 				= flag.String("tQ", "transcriptions", "output transcriptions")
-	rQ      		= flag.String("rQ", "recoverq", "recent audio data")
-	retainTime     	= flag.Duration("recoveryRetainLast", 3*time.Second, "Retain  duration ")
-	expiryTime     	= flag.Duration("expiryTime", 30*time.Second, "Expire data ")
-	flushTimeout       = flag.Duration("flushTimeout", 3000*time.Millisecond, "pending transcriptions publishted after time")
-	pendingWordCount   = flag.Int("pendingWordCount", 4, "Treat last N are pending")
-	sampleRate         = flag.Int("sampleRate", 16000, "(Hz)")
-	channels           = flag.Int("channels", 1, "# audio channels")
-	lang               = flag.String("lang", "en-US", "language code")
-	phrases            = flag.String("phrases", "", " hints for Speech API")
-
-	recoveryRetainSize = int64(*retainTime / (100 * time.Millisecond)) // each audio element ~100ms
-	newTranscription   string
-	lastIndex          = 0
-	pending            []string
-)
-
 func resetWordIndex() {
 	lastIndex = 0
 	pending = nil
@@ -247,6 +226,28 @@ func logResponses(resp speechpb.StreamingRecognizeResponse) {
 		klog.Infof("Result: %+v\n", res)
 	}
 }
+
+var (
+	redisHost          = flag.String("redisHost", "localhost", "Redis IP")
+	redisClient        *redis.Client
+	aQ         		= flag.String("aQ", "liveq", "input audio data")
+	tQ 				= flag.String("tQ", "transcriptions", "output transcriptions")
+	rQ      		= flag.String("rQ", "recoverq", "recent audio data")
+	retainTime     	= flag.Duration("recoveryRetainLast", 3*time.Second, "Retain  duration ")
+	expiryTime     	= flag.Duration("expiryTime", 30*time.Second, "Expire data ")
+	flushTimeout       = flag.Duration("flushTimeout", 3000*time.Millisecond, "pending transcriptions publishted after time")
+	pendingWordCount   = flag.Int("pendingWordCount", 4, "Treat last N are pending")
+	sampleRate         = flag.Int("sampleRate", 16000, "(Hz)")
+	channels           = flag.Int("channels", 1, "# audio channels")
+	lang               = flag.String("lang", "en-US", "language code")
+	phrases            = flag.String("phrases", "", " hints for Speech API")
+
+	recoveryRetainSize = int64(*retainTime / (100 * time.Millisecond)) // each audio element ~100ms
+	newTranscription   string
+	lastIndex          = 0
+	pending            []string
+)
+
 
 func main() {
 	flag.Parse()
