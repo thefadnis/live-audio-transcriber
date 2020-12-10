@@ -1,4 +1,5 @@
 // refrence taken from google speech streaming API docs
+// https://cloud.google.com/speech-to-text/docs/how-to
 
 package main
 
